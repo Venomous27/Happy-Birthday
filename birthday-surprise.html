@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday 🎂</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --gold: #f7c948;
+    --pink: #ff6b9d;
+    --lavender: #c77dff;
+    --cream: #fff8f0;
+    --coral: #ff8c69;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: 'Caveat', cursive;
+    user-select: none;
+    cursor: none;
+  }
+
+  /* ── DARK SCENE ── */
+  #dark-scene {
+    position: fixed; inset: 0;
+    background: #000;
+    z-index: 100;
+    transition: opacity 1.2s ease;
+  }
+
+  #flashlight {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle 120px at var(--mx,50%) var(--my,50%),
+      rgba(255,240,200,0.18) 0%,
+      rgba(255,240,200,0.08) 40%,
+      transparent 70%);
+    z-index: 101;
+    transition: background 0.05s;
+  }
+
+  #hint-text {
+    position: fixed;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,240,200,0.45);
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    letter-spacing: 0.08em;
+    z-index: 102;
+    text-align: center;
+    animation: pulse 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.75; }
+  }
+
+  #switch-btn {
+    position: fixed;
+    top: 38%;
+    right: 22%;
+    width: 48px; height: 80px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 24px;
+    cursor: pointer;
+    z-index: 103;
+    display: flex; align-items: flex-end; justify-content: center;
+    padding-bottom: 8px;
+    opacity: 0;
+    transition: opacity 0.3s, box-shadow 0.3s;
+    box-shadow: none;
+  }
+
+  #switch-btn::after {
+    content: '';
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #2a2a2a;
+    border: 2px solid #444;
+    transition: background 0.3s;
+  }
+
+  #switch-btn.lit {
+    background: #1a1a14;
+    border-color: var(--gold);
+    box-shadow: 0 0 20px var(--gold), 0 0 50px rgba(247,201,72,0.3);
+  }
+  #switch-btn.lit::after { background: var(--gold); }
+
+  #switch-label {
+    position: fixed;
+    top: calc(38% + 88px);
+    right: calc(22% - 14px);
+    color: rgba(255,240,200,0.5);
+    font-size: 0.85rem;
+    z-index: 103;
+    opacity: 0;
+    letter-spacing: 0.12em;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  /* custom cursor */
+  #cursor {
+    position: fixed;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(255,240,200,0.9);
+    box-shadow: 0 0 12px 4px rgba(255,240,200,0.5);
+    pointer-events: none;
+    z-index: 200;
+    transform: translate(-50%, -50%);
+    transition: transform 0.08s;
+  }
+
+  /* ── FLASH TRANSITION ── */
+  #flash {
+    position: fixed; inset: 0;
+    background: white;
+    z-index: 99;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+
+  /* ── BRIGHT SCENE ── */
+  #bright-scene {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg, #fff8f0 0%, #ffe0f0 40%, #f0e8ff 100%);
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  #bright-scene.visible {
+    opacity: 1;
+    pointer-events: all;
+    cursor: default;
+  }
+
+  /* Decorative BG shapes */
+  .bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .blob1 { width: 500px; height: 500px; background: var(--pink); top: -100px; left: -100px; }
+  .blob2 { width: 400px; height: 400px; background: var(--lavender); bottom: -80px; right: -80px; }
+  .blob3 { width: 300px; height: 300px; background: var(--gold); bottom: 10%; left: 5%; opacity: 0.25; }
+
+  /* ── BANNER ── */
+  #banner {
+    position: relative;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: opacity 0.8s ease 0.3s, transform 0.8s ease 0.3s;
+  }
+  #bright-scene.visible #banner { opacity: 1; transform: translateY(0); }
+
+  #banner h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    color: #3a1a3a;
+    line-height: 1.1;
+    text-shadow: 3px 3px 0 rgba(255,107,157,0.2);
+  }
+  #banner h1 span { color: var(--pink); font-style: italic; }
+  #banner .subtitle {
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    color: #9b5e8a;
+    letter-spacing: 0.15em;
+    margin-top: 0.3rem;
+  }
+
+  /* ── CAKE ── */
+  #cake-area {
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.6s ease 0.9s, transform 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.9s;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  #bright-scene.visible #cake-area { opacity: 1; transform: scale(1); }
+
+  #cake-area::after {
+    content: '✨';
+    position: absolute; top: -10px; right: -10px;
+    font-size: 1.5rem;
+    animation: sparkle 1.5s ease-in-out infinite;
+  }
+  @keyframes sparkle {
+    0%, 100% { transform: rotate(0deg) scale(1); opacity: 1; }
+    50% { transform: rotate(20deg) scale(1.3); opacity: 0.6; }
+  }
+
+  /* ── CHARACTERS STAGE ── */
+  #characters {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2.5rem);
+    align-items: flex-end;
+    margin-bottom: 1.8rem;
+    min-height: 110px;
+  }
+
+  .character {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  .char-img {
+    width: clamp(60px, 10vw, 90px);
+    height: clamp(70px, 12vw, 105px);
+    object-fit: contain;
+    filter: drop-shadow(0 6px 12px rgba(100,0,100,0.15));
+  }
+
+  /* Placeholder emoji characters (replace with actual images) */
+  .char-placeholder {
+    width: clamp(60px, 10vw, 90px);
+    height: clamp(70px, 12vw, 105px);
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    display: flex; align-items: center; justify-content: center;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    animation: sway 2.5s ease-in-out infinite;
+  }
+
+  .char-placeholder:nth-child(1) { animation-delay: 0s; }
+  .char-placeholder:nth-child(2) { animation-delay: 0.4s; }
+  .char-placeholder:nth-child(3) { animation-delay: 0.8s; }
+
+  @keyframes sway {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+
+  .char-name {
+    font-size: 0.85rem;
+    color: #9b5e8a;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── LETTER ── */
+  #letter {
+    background: white;
+    border-radius: 18px;
+    padding: clamp(1rem, 3vw, 2rem) clamp(1.5rem, 4vw, 2.5rem);
+    max-width: min(480px, 88vw);
+    box-shadow: 0 8px 40px rgba(155,94,138,0.15), 0 2px 8px rgba(0,0,0,0.05);
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease 2.2s, transform 0.8s ease 2.2s;
+    border: 1.5px solid rgba(255,107,157,0.2);
+  }
+  #bright-scene.visible #letter { opacity: 1; transform: translateY(0); }
+
+  #letter::before {
+    content: '💌';
+    position: absolute;
+    top: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 1.8rem;
+  }
+
+  #letter-text {
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    color: #4a2a4a;
+    line-height: 1.7;
+    text-align: center;
+    min-height: 80px;
+  }
+
+  #cursor-blink {
+    display: inline-block;
+    width: 2px; height: 1.2em;
+    background: var(--pink);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ── CONFETTI ── */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    top: -20px;
+    pointer-events: none;
+    z-index: 50;
+    animation: confettiFall linear forwards;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ── STREAMERS ── */
+  .streamer {
+    position: fixed;
+    top: 0; pointer-events: none; z-index: 49;
+    width: 4px;
+    border-radius: 2px;
+    animation: streamerFall linear forwards;
+    opacity: 0.7;
+  }
+  @keyframes streamerFall {
+    0%   { transform: translateY(-100px) scaleX(1); opacity: 0.8; }
+    100% { transform: translateY(110vh) scaleX(0.5); opacity: 0; }
+  }
+
+  /* ── MOBILE TOUCH FLASHLIGHT ── */
+  @media (hover: none) {
+    #hint-text::after { content: " (tap & drag!)"; font-size: 0.85em; }
+  }
+
+  /* ── AUDIO ICON ── */
+  #audio-btn {
+    position: fixed; bottom: 20px; right: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 1.3rem;
+    cursor: pointer;
+    z-index: 300;
+    display: none;
+    align-items: center; justify-content: center;
+    transition: transform 0.2s;
+  }
+  #audio-btn:hover { transform: scale(1.1); }
+  #audio-btn.show { display: flex; }
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cursor"></div>
+
+<!-- Flash overlay -->
+<div id="flash"></div>
+
+<!-- ══════════ DARK SCENE ══════════ -->
+<div id="dark-scene">
+  <div id="flashlight"></div>
+  <div id="hint-text">It's too dark… find the switch 🔦</div>
+
+  <button id="switch-btn" aria-label="Light switch" title="Click me!"></button>
+  <div id="switch-label">switch</div>
+</div>
+
+<!-- ══════════ BRIGHT SCENE ══════════ -->
+<div id="bright-scene">
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="bg-blob blob3"></div>
+
+  <div id="banner">
+    <h1>Happy <span>Birthday!</span> 🎉</h1>
+    <div class="subtitle">★ a little something for you ★</div>
+  </div>
+
+  <div id="cake-area">🎂</div>
+
+  <!-- ── CHARACTERS ──
+       Replace .char-placeholder with <img class="char-img" src="YOUR_IMAGE.png" alt="...">
+       Add or remove .character divs as needed
+  ── -->
+  <div id="characters">
+    <div class="character" id="char1">
+      <div class="char-placeholder">🐱</div>
+      <span class="char-name">character 1</span>
+    </div>
+    <div class="character" id="char2">
+      <div class="char-placeholder">🌸</div>
+      <span class="char-name">character 2</span>
+    </div>
+    <div class="character" id="char3">
+      <div class="char-placeholder">⭐</div>
+      <span class="char-name">character 3</span>
+    </div>
+  </div>
+
+  <!-- ── LETTER ── Replace the message string in JS below ── -->
+  <div id="letter">
+    <div id="letter-text"></div>
+  </div>
+</div>
+
+<!-- Music (add your audio file as src) -->
+<audio id="birthday-audio" loop>
+  <!-- <source src="your-song.mp3" type="audio/mpeg"> -->
+</audio>
+
+<button id="audio-btn" title="Toggle music">🔊</button>
+
+<script>
+// ═══════════════════════════════════════════════
+//  ✏️  CUSTOMIZE THESE  ✏️
+// ═══════════════════════════════════════════════
+const BIRTHDAY_MESSAGE = `Happy Birthday! 🎉
+
+You're one of the most amazing people I know,
+and I'm so lucky to have you in my life.
+
+I made this tiny world just for you —
+because you deserve something as special as you are.
+
+Wishing you the happiest day ever.
+
+With love 💕`;
+
+// Switch position — tweak if needed
+// Already set via CSS (top:38%, right:22%)
+// ═══════════════════════════════════════════════
+
+const darkScene    = document.getElementById('dark-scene');
+const flashlight   = document.getElementById('flashlight');
+const switchBtn    = document.getElementById('switch-btn');
+const switchLabel  = document.getElementById('switch-label');
+const brightScene  = document.getElementById('bright-scene');
+const flashEl      = document.getElementById('flash');
+const cursor       = document.getElementById('cursor');
+const letterText   = document.getElementById('letter-text');
+const audioEl      = document.getElementById('birthday-audio');
+const audioBtn     = document.getElementById('audio-btn');
+
+let mx = window.innerWidth / 2;
+let my = window.innerHeight / 2;
+let revealed = false;
+
+// ── Cursor & Flashlight ──
+function updateLight(x, y) {
+  mx = x; my = y;
+  cursor.style.left = x + 'px';
+  cursor.style.top  = y + 'px';
+  flashlight.style.background =
+    `radial-gradient(circle 130px at ${x}px ${y}px,
+      rgba(255,240,200,0.22) 0%,
+      rgba(255,240,200,0.10) 40%,
+      transparent 68%)`;
+
+  // proximity glow on switch
+  if (!revealed) {
+    const rect   = switchBtn.getBoundingClientRect();
+    const cx     = rect.left + rect.width / 2;
+    const cy     = rect.top  + rect.height / 2;
+    const dist   = Math.hypot(x - cx, y - cy);
+    const reveal = Math.max(0, 1 - dist / 160);
+    const glow   = Math.max(0, 1 - dist / 90);
+
+    switchBtn.style.opacity  = reveal;
+    switchLabel.style.opacity = reveal * 0.7;
+    if (glow > 0.3) {
+      switchBtn.classList.add('lit');
+    } else {
+      switchBtn.classList.remove('lit');
+    }
+  }
+}
+
+document.addEventListener('mousemove', e => updateLight(e.clientX, e.clientY));
+document.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  updateLight(t.clientX, t.clientY);
+}, { passive: false });
+document.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  updateLight(t.clientX, t.clientY);
+});
+
+// ── Switch Click ──
+switchBtn.addEventListener('click', triggerReveal);
+switchBtn.addEventListener('touchend', triggerReveal);
+
+function triggerReveal(e) {
+  e.preventDefault();
+  if (revealed) return;
+  revealed = true;
+  cursor.style.display = 'none';
+
+  // play audio
+  if (audioEl.src && audioEl.src !== window.location.href) {
+    audioEl.play().catch(() => {});
+    audioBtn.classList.add('show');
+  }
+
+  // Flash
+  flashEl.style.transition = 'opacity 0.12s';
+  flashEl.style.opacity = '1';
+  setTimeout(() => {
+    darkScene.style.opacity = '0';
+    darkScene.style.pointerEvents = 'none';
+    flashEl.style.transition = 'opacity 0.8s';
+    flashEl.style.opacity = '0';
+    setTimeout(() => darkScene.style.display = 'none', 1300);
+
+    brightScene.classList.add('visible');
+    document.body.style.cursor = 'default';
+
+    spawnConfetti();
+    revealCharacters();
+    setTimeout(startTyping, 2800);
+  }, 180);
+}
+
+// ── Confetti ──
+const COLORS = ['#f7c948','#ff6b9d','#c77dff','#ff8c69','#7fd1b9','#fff'];
+function spawnConfetti() {
+  for (let i = 0; i < 140; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const isStreamer = Math.random() > 0.6;
+      if (isStreamer) {
+        el.className = 'streamer';
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.height = (30 + Math.random() * 60) + 'px';
+        el.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+        el.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+      } else {
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.background = COLORS[Math.floor(Math.random() * COLORS.length)];
+        el.style.width  = (6 + Math.random() * 10) + 'px';
+        el.style.height = (6 + Math.random() * 10) + 'px';
+        el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        el.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+      }
+      el.style.animationDelay = (Math.random() * 1.5) + 's';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 7000);
+    }, Math.random() * 600);
+  }
+}
+
+// ── Characters ──
+function revealCharacters() {
+  ['char1','char2','char3'].forEach((id, i) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      if (el) { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }
+    }, 800 + i * 350);
+  });
+}
+
+// ── Typing Effect ──
+function startTyping() {
+  const lines = BIRTHDAY_MESSAGE.trim().split('\n');
+  let html = '';
+  let lineIdx = 0;
+  let charIdx = 0;
+
+  const blink = document.createElement('span');
+  blink.id = 'cursor-blink';
+  letterText.appendChild(blink);
+
+  function type() {
+    if (lineIdx >= lines.length) {
+      blink.remove();
+      return;
+    }
+    const line = lines[lineIdx];
+    if (charIdx < line.length) {
+      html += line[charIdx] === ' ' ? '&nbsp;' : line[charIdx];
+      letterText.innerHTML = html + '<span id="cursor-blink"></span>';
+      charIdx++;
+      setTimeout(type, line[charIdx - 1] === ',' ? 120 : 35);
+    } else {
+      html += '<br>';
+      lineIdx++; charIdx = 0;
+      setTimeout(type, 200);
+    }
+  }
+  type();
+}
+
+// ── Audio toggle ──
+audioBtn.addEventListener('click', () => {
+  if (audioEl.paused) {
+    audioEl.play();
+    audioBtn.textContent = '🔊';
+  } else {
+    audioEl.pause();
+    audioBtn.textContent = '🔇';
+  }
+});
+</script>
+</body>
+</html>
